@@ -1,26 +1,24 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Auto Prediction Dashboard</title>
-</head>
-<body>
-    <h2>📊 Today Prediction</h2>
-    <div id="box" style="padding:20px; border:1px solid #000; width:300px;"></div>
+require('dotenv').config();
+const axios = require('axios');
 
-    <script>
-        function loadPrediction() {
-            fetch("prediction.txt?" + new Date().getTime())
-                .then(res => res.text())
-                .then(text => {
-                    document.getElementById("box").innerText = text;
-                });
-        }
+const sendPrediction = async (prediction) => {
+  try {
+    await axios.post("https://onesignal.com/api/v1/notifications", {
+      app_id: process.env.ONESIGNAL_APP_ID,
+      included_segments: ["All"],
+      headings: { en: "Football Prediction" },
+      contents: { en: prediction }
+    }, {
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Basic ${process.env.ONESIGNAL_REST_KEY}`
+      }
+    });
+    console.log("Prediction sent:", prediction);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-        // Initial load
-        loadPrediction();
-
-        // Auto refresh every 10 sec
-        setInterval(loadPrediction, 10000);
-    </script>
-</body>
-</html>
+// Example test:
+sendPrediction("Team A vs Team B: Winner 60%, BTTS-No, Correct Score 1-0/2-0");
