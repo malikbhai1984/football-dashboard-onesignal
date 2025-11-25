@@ -1,24 +1,44 @@
 require('dotenv').config();
 const axios = require('axios');
 
-const sendPrediction = async (prediction) => {
+// ---- Sample Prediction Logic ----
+// Replace this with your real pro-level algorithm
+const generatePrediction = () => {
+  return "Team A vs Team B: Winner 60%, BTTS-No, Correct Score 1-0/2-0";
+};
+
+// ---- OneSignal Push Function ----
+const sendPush = async (prediction) => {
   try {
-    await axios.post("https://onesignal.com/api/v1/notifications", {
-      app_id: process.env.ONESIGNAL_APP_ID,
-      included_segments: ["All"],
-      headings: { en: "Football Prediction" },
-      contents: { en: prediction }
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Basic ${process.env.ONESIGNAL_REST_KEY}`
+    const response = await axios.post(
+      "https://onesignal.com/api/v1/notifications",
+      {
+        app_id: process.env.ONESIGNAL_APP_ID,
+        included_segments: ["All"], // All devices
+        headings: { en: "Football Prediction" },
+        contents: { en: prediction }
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Basic ${process.env.ONESIGNAL_REST_KEY}`
+        }
       }
-    });
-    console.log("Prediction sent:", prediction);
+    );
+    console.log("✅ Prediction sent:", prediction);
   } catch (err) {
-    console.error(err);
+    console.error("❌ Error sending prediction:", err.message);
   }
 };
 
-// Example test:
-sendPrediction("Team A vs Team B: Winner 60%, BTTS-No, Correct Score 1-0/2-0");
+// ---- Run Prediction & Send Push ----
+const run = async () => {
+  const prediction = generatePrediction();
+  await sendPush(prediction);
+};
+
+// Optional: send prediction every X minutes
+// setInterval(run, 10 * 60 * 1000); // every 10 minutes
+
+// Run immediately
+run();
