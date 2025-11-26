@@ -1,44 +1,37 @@
-require('dotenv').config();
-const axios = require('axios');
+import express from "express";
+import fetch from "node-fetch";
+import dotenv from "dotenv";
+dotenv.config();
 
-// ---- Sample Prediction Logic ----
-// Replace this with your real pro-level algorithm
-const generatePrediction = () => {
-  return "Team A vs Team B: Winner 60%, BTTS-No, Correct Score 1-0/2-0";
-};
+const app = express();
+app.use(express.json());
 
-// ---- OneSignal Push Function ----
-const sendPush = async (prediction) => {
-  try {
-    const response = await axios.post(
-      "https://onesignal.com/api/v1/notifications",
-      {
-        app_id: process.env.ONESIGNAL_APP_ID,
-        included_segments: ["All"], // All devices
-        headings: { en: "Football Prediction" },
-        contents: { en: prediction }
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Basic ${process.env.ONESIGNAL_REST_KEY}`
-        }
-      }
-    );
-    console.log("✅ Prediction sent:", prediction);
-  } catch (err) {
-    console.error("❌ Error sending prediction:", err.message);
-  }
-};
+app.get("/", (req, res) => {
+  res.send("Football Prediction Backend Running");
+});
 
-// ---- Run Prediction & Send Push ----
-const run = async () => {
-  const prediction = generatePrediction();
-  await sendPush(prediction);
-};
+// SEND NOTIFICATION FUNCTION
+async function sendNotification(message) {
+  const res = await fetch("https://api.onesignal.com/notifications", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Basic ${process.env.ONESIGNAL_REST_KEY}`
+    },
+    body: JSON.stringify({
+      app_id: process.env.ONESIGNAL_APP_ID,
+      included_segments: ["All"],
+      contents: { en: message }
+    })
+  });
 
-// Optional: send prediction every X minutes
-// setInterval(run, 10 * 60 * 1000); // every 10 minutes
+  const data = await res.json();
+  console.log("Notification Result:", data);
+}
 
-// Run immediately
-run();
+app.get("/send", async (req, res) => {
+  await sendNotification("🔥 Auto Football Prediction Ready!");
+  res.send("Notification Sent!");
+});
+
+app.listen(3000, () => console.log("Server running on 3000"));
